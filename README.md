@@ -75,7 +75,3 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 - **Authentication**: JWT tokens with HTTP-only cookies
 - **Security**: bcryptjs for password hashing
 - **Maps**: Leaflet with React-Leaflet for interactive maps
-
-## 📚 MongoDB Setup
-
-For detailed MongoDB connection instructions, see [MONGODB_SETUP.md](./MONGODB_SETUP.md)
