@@ -1,4 +1,4 @@
-# Next.js Weather App
+# Next.js Leaflet Map App
 
 A full-stack Next.js application with authentication, built with JavaScript, Tailwind CSS, and MongoDB.
 

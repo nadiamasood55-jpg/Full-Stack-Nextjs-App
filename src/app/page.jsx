@@ -98,7 +98,7 @@ function Home() {
                 </Link>
               </div>
             </Card>
-          </div>
+          </div>  
         </div>
       </div>
     </div>
