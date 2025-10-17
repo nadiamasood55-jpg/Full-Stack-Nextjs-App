@@ -9,7 +9,8 @@ import MapWrapper from '../../components/MapWrapper';
 function DashboardPage() {
   const [user, setUser] = useState({
     name: 'Guest User',
-    email: 'guest@example.com'
+    email: 'guest@example.com',
+    phoneNumber: null
   });
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -44,7 +45,8 @@ function DashboardPage() {
       // Reset to guest user after logout
       setUser({
         name: 'Guest User',
-        email: 'guest@example.com'
+        email: 'guest@example.com',
+        phoneNumber: null
       });
     } catch (error) {
       console.error('Logout error:', error);

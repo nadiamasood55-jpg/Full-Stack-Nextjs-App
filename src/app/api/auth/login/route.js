@@ -5,12 +5,19 @@ const { generateToken } = require('../../../../lib/auth');
 
 async function POST(request) {
   try {
-    const { email, password } = await request.json();
+    const { email, phoneNumber, password } = await request.json();
 
-    // Validation
-    if (!email || !password) {
+    // Validation - either email or phone number is required
+    if (!password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Password is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!email && !phoneNumber) {
+      return NextResponse.json(
+        { error: 'Either email or phone number is required' },
         { status: 400 }
       );
     }
@@ -18,12 +25,17 @@ async function POST(request) {
     // Connect to database
     await connectDB();
 
-    // Find user and include password for comparison
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+    // Find user by email or phone number and include password for comparison
+    let user;
+    if (email) {
+      user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+    } else {
+      user = await User.findOne({ phoneNumber: phoneNumber.trim() }).select('+password');
+    }
     
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
@@ -32,7 +44,7 @@ async function POST(request) {
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: 'Invalid email or password' },
+        { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
@@ -45,6 +57,7 @@ async function POST(request) {
           id: user._id,
           name: user.name,
           email: user.email,
+          phoneNumber: user.phoneNumber,
         },
       },
       { status: 200 }
@@ -55,6 +68,7 @@ async function POST(request) {
       id: user._id.toString(),
       name: user.name,
       email: user.email,
+      phoneNumber: user.phoneNumber,
     }), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

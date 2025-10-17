@@ -11,11 +11,13 @@ function SignupPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phoneNumber: '',
     password: '',
     confirmPassword: '',
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [signupMethod, setSignupMethod] = useState('email'); // 'email' or 'phone'
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -42,22 +44,34 @@ function SignupPage() {
       newErrors.name = 'Name must be at least 2 characters long';
     }
 
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    if (signupMethod === 'email') {
+      if (!formData.email) {
+        newErrors.email = 'Email is required';
+      } else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email address';
+      }
+    } else {
+      if (!formData.phoneNumber) {
+        newErrors.phoneNumber = 'Phone number is required';
+      } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.phoneNumber)) {
+        newErrors.phoneNumber = 'Please enter a valid phone number';
+      }
     }
 
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters long';
+    if (signupMethod === 'email') {
+      if (!formData.password) {
+        newErrors.password = 'Password is required';
+      } else if (formData.password.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters long';
+      }
     }
 
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+    if (signupMethod === 'email') {
+      if (!formData.confirmPassword) {
+        newErrors.confirmPassword = 'Please confirm your password';
+      } else if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      }
     }
 
     setErrors(newErrors);
@@ -74,23 +88,30 @@ function SignupPage() {
     setLoading(true);
 
     try {
+      const signupData = {
+        name: formData.name.trim(),
+        password: formData.password,
+      };
+
+      if (signupMethod === 'email') {
+        signupData.email = formData.email;
+      } else {
+        signupData.phoneNumber = formData.phoneNumber;
+      }
+
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email,
-          password: formData.password,
-        }),
+        body: JSON.stringify(signupData),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // Redirect to dashboard or home page
-        router.push('/dashboard');
+        // Redirect to login page after successful signup
+        router.push('/login');
       } else {
         setErrors({ general: data.error || 'Signup failed' });
       }
@@ -139,42 +160,111 @@ function SignupPage() {
               placeholder="Enter your full name"
             />
 
-            <Input
-              label="Email address"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              error={errors.email}
-              placeholder="Enter your email"
-            />
+            {/* Signup Method Toggle */}
+            <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+              <button
+                type="button"
+                onClick={() => {
+                  setSignupMethod('email');
+                  setErrors({});
+                  setFormData(prev => ({ ...prev, phoneNumber: '' }));
+                }}
+                className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+                  signupMethod === 'email'
+                    ? 'bg-white text-green-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                📧 Email
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSignupMethod('phone');
+                  setErrors({});
+                  setFormData(prev => ({ ...prev, email: '' }));
+                }}
+                className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+                  signupMethod === 'phone'
+                    ? 'bg-white text-green-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                📱 Phone
+              </button>
+            </div>
 
-            <Input
-              label="Password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              placeholder="Create a password"
-              helperText="Password must be at least 6 characters long"
-            />
+            {signupMethod === 'email' ? (
+              <Input
+                label="Email address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                error={errors.email}
+                placeholder="Enter your email"
+              />
+            ) : (
+              <Input
+                label="Phone number"
+                name="phoneNumber"
+                type="tel"
+                autoComplete="tel"
+                required
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                error={errors.phoneNumber}
+                placeholder="Enter your phone number"
+              />
+            )}
 
-            <Input
-              label="Confirm password"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              error={errors.confirmPassword}
-              placeholder="Confirm your password"
-            />
+            {signupMethod === 'email' && (
+              <>
+                <Input
+                  label="Password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={errors.password}
+                  placeholder="Create a password"
+                  helperText="Password must be at least 6 characters long"
+                />
+
+                <Input
+                  label="Confirm password"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  error={errors.confirmPassword}
+                  placeholder="Confirm your password"
+                />
+              </>
+            )}
+
+            {signupMethod === 'phone' && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-blue-700">
+                      <strong>Phone Signup:</strong> You'll receive a verification code via SMS to complete your registration.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center">
               <input

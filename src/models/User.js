@@ -10,8 +10,11 @@ const UserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: [true, 'Email is required'],
+    required: function() {
+      return !this.phoneNumber; // Email is required if no phone number
+    },
     unique: true,
+    sparse: true, // Allows multiple null values
     lowercase: true,
     trim: true,
     match: [
@@ -19,11 +22,31 @@ const UserSchema = new mongoose.Schema({
       'Please enter a valid email',
     ],
   },
+  phoneNumber: {
+    type: String,
+    required: function() {
+      return !this.email; // Phone number is required if no email
+    },
+    unique: true,
+    sparse: true, // Allows multiple null values
+    trim: true,
+    match: [
+      /^[\+]?[1-9][\d]{0,15}$/,
+      'Please enter a valid phone number',
+    ],
+  },
   password: {
     type: String,
-    required: [true, 'Password is required'],
+    required: function() {
+      return !this.firebaseUid; // Password not required if using Firebase auth
+    },
     minlength: [6, 'Password must be at least 6 characters'],
     select: false, // Don't include password in queries by default
+  },
+  firebaseUid: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows multiple null values
   },
 }, {
   timestamps: true,
