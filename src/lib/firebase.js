@@ -2,14 +2,14 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, RecaptchaVerifier } from 'firebase/auth';
 
 // Firebase configuration
-// You need to replace these with your actual Firebase config values
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  apiKey: "AIzaSyAbV7lQIUSbqIGFv423RrLcb_AGRJmSG0E",
+  authDomain: "nextjs-map-app-ba905.firebaseapp.com",
+  projectId: "nextjs-map-app-ba905",
+  storageBucket: "nextjs-map-app-ba905.firebasestorage.app",
+  messagingSenderId: "50171430851",
+  appId: "1:50171430851:web:95f3345469bdc1e9b01f76",
+  measurementId: "G-ZDFKD28F11"
 };
 
 // Initialize Firebase
@@ -35,3 +35,4 @@ export const initializeRecaptcha = (elementId) => {
 };
 
 export default app;
+
