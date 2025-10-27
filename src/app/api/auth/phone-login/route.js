@@ -50,6 +50,7 @@ async function POST(request) {
     // Set simple session cookie
     response.cookies.set('user', JSON.stringify({
       id: user._id.toString(),
+      _id: user._id.toString(),
       name: user.name,
       email: user.email,
       phoneNumber: user.phoneNumber,
@@ -71,4 +72,5 @@ async function POST(request) {
 }
 
 module.exports = { POST };
+
 

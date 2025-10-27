@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 
 function LocationTracker() {
   const [userPosition, setUserPosition] = useState(null);
+  const [locationError, setLocationError] = useState(null);
   const map = useMap();
 
   useEffect(() => {
@@ -14,11 +15,20 @@ function LocationTracker() {
           const userPos = [position.coords.latitude, position.coords.longitude];
           setUserPosition(userPos);
           map.flyTo(userPos, 13);
+          setLocationError(null);
         },
         (error) => {
           console.log('Error getting location:', error);
+          setLocationError(error.message);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
         }
       );
+    } else {
+      setLocationError('Geolocation is not supported by this browser.');
     }
   }, [map]);
 
@@ -31,7 +41,15 @@ function LocationTracker() {
         </div>
       </Popup>
     </Marker>
-  ) : null;
+  ) : locationError ? (
+    <div className="absolute top-4 left-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-[1000]">
+      <strong>Location Error:</strong> {locationError}
+    </div>
+  ) : (
+    <div className="absolute top-4 left-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded z-[1000]">
+      <strong>Requesting location...</strong> Please allow location access.
+    </div>
+  );
 }
 
 function ClientMap() {

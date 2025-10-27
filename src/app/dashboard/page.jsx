@@ -5,15 +5,29 @@ import { useRouter } from 'next/navigation';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import MapWrapper from '../../components/MapWrapper';
+import { useSessionTracking } from '../../hooks/useSessionTracking';
 
 function DashboardPage() {
   const [user, setUser] = useState({
     name: 'Guest User',
     email: 'guest@example.com',
-    phoneNumber: null
+    phoneNumber: null,
+    _id: null
   });
   const [loading, setLoading] = useState(false);
+  const [sessionDuration, setSessionDuration] = useState(0);
+  const [sessionStartTime, setSessionStartTime] = useState(null);
   const router = useRouter();
+  
+  // Session tracking hook
+  const { 
+    sessionData, 
+    currentSession, 
+    trackLogin, 
+    trackLogout, 
+    getCurrentSessionDuration,
+    formatDuration 
+  } = useSessionTracking(user._id);
 
   useEffect(() => {
     // Try to get user data if available, but don't require it
@@ -23,7 +37,14 @@ function DashboardPage() {
         
         if (response.ok) {
           const userData = await response.json();
+          console.log('User data from API:', userData.user);
           setUser(userData.user);
+          // Track login time for authenticated users
+          if (userData.user._id) {
+            console.log('Tracking login for user:', userData.user._id);
+            setSessionStartTime(Date.now());
+            await trackLogin();
+          }
         }
         // If no session, just use guest user data (already set above)
       } catch (error) {
@@ -35,19 +56,49 @@ function DashboardPage() {
     };
 
     checkAuth();
-  }, [router]);
+  }, [router, trackLogin]);
+
+  // Update session duration every second
+  useEffect(() => {
+    if (user._id) {
+      const interval = setInterval(() => {
+        if (sessionStartTime) {
+          // Calculate duration from session start time
+          const duration = Math.floor((Date.now() - sessionStartTime) / 1000);
+          setSessionDuration(duration);
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [user._id, sessionStartTime]);
 
   const handleLogout = async () => {
     try {
+      // Track logout time and get session duration
+      if (user._id) {
+        const sessionData = await trackLogout();
+        if (sessionData) {
+          alert(`Session ended! You spent ${sessionData.formattedDuration} on the dashboard.`);
+        }
+      }
+      
       await fetch('/api/auth/logout', {
         method: 'POST',
       });
+      
       // Reset to guest user after logout
       setUser({
         name: 'Guest User',
         email: 'guest@example.com',
-        phoneNumber: null
+        phoneNumber: null,
+        _id: null
       });
+      setSessionDuration(0);
+      setSessionStartTime(null);
+      
+      // Redirect to login page
+      router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -78,6 +129,11 @@ function DashboardPage() {
               <span className="text-sm text-gray-700">
                 Welcome, {user?.name}
               </span>
+              {user?._id && (
+                <div className="text-sm text-blue-600 font-medium">
+                  Session: {formatDuration(sessionDuration)}
+                </div>
+              )}
               {user?.email === 'guest@example.com' ? (
                 <Button
                   variant="primary"
@@ -128,6 +184,52 @@ function DashboardPage() {
             </Card>
           </div>
 
+          {/* Session Tracking for Authenticated Users */}
+          {user?._id && (
+            <div className="mb-8">
+              <Card>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  ⏱️ Session Tracking
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-800 mb-2">
+                      Current Session
+                    </h4>
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <p className="text-2xl font-bold text-blue-600">
+                        {formatDuration(sessionDuration)}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Time spent on dashboard
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {sessionData && sessionData.length > 0 && (
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-800 mb-2">
+                        Recent Sessions
+                      </h4>
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {sessionData.slice(-3).reverse().map((session, index) => (
+                          <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                            <p className="text-sm font-medium text-gray-700">
+                              {session.formattedDuration}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(session.logoutTime).toLocaleString()}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
+          )}
+
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
@@ -155,6 +257,11 @@ function DashboardPage() {
                 <p className="text-sm text-gray-600">
                   Real-time user position detection
                 </p>
+                {user?._id && (
+                  <p className="text-sm text-gray-600">
+                    Session time tracking enabled
+                  </p>
+                )}
               </div>
             </Card>
           </div>

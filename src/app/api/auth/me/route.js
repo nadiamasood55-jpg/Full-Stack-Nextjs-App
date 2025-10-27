@@ -17,8 +17,10 @@ async function GET(request) {
     return NextResponse.json({
       user: {
         id: user.id,
+        _id: user._id || user.id,
         name: user.name,
         email: user.email,
+        phoneNumber: user.phoneNumber,
       },
     });
   } catch (error) {

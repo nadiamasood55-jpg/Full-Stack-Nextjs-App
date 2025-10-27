@@ -48,6 +48,28 @@ const UserSchema = new mongoose.Schema({
     unique: true,
     sparse: true, // Allows multiple null values
   },
+  lastLoginTime: {
+    type: Date,
+    default: null,
+  },
+  sessionHistory: [{
+    loginTime: {
+      type: Date,
+      required: true,
+    },
+    logoutTime: {
+      type: Date,
+      required: true,
+    },
+    duration: {
+      type: Number, // in seconds
+      required: true,
+    },
+    formattedDuration: {
+      type: String,
+      required: true,
+    },
+  }],
 }, {
   timestamps: true,
 });

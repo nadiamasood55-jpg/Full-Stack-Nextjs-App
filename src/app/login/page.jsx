@@ -47,8 +47,22 @@ function LoginPage() {
     } else {
       if (!formData.phoneNumber) {
         newErrors.phoneNumber = 'Phone number is required';
-      } else if (!/^[\+]?[1-9][\d]{0,15}$/.test(formData.phoneNumber)) {
-        newErrors.phoneNumber = 'Please enter a valid phone number';
+      } else {
+        // Format phone number for Firebase (ensure it starts with +)
+        let formattedPhone = formData.phoneNumber.trim();
+        if (!formattedPhone.startsWith('+')) {
+          formattedPhone = '+' + formattedPhone;
+        }
+        
+        // Update the form data with formatted phone number
+        setFormData(prev => ({
+          ...prev,
+          phoneNumber: formattedPhone
+        }));
+        
+        if (!/^\+[1-9][\d]{0,15}$/.test(formattedPhone)) {
+          newErrors.phoneNumber = 'Please enter a valid phone number with country code (e.g., +923076734412)';
+        }
       }
     }
 
@@ -228,7 +242,8 @@ function LoginPage() {
                 value={formData.phoneNumber}
                 onChange={handleChange}
                 error={errors.phoneNumber}
-                placeholder="Enter your phone number"
+                placeholder="+923076734412"
+                helperText="Include country code (e.g., +92 for Pakistan). For testing, use: +1 650-555-3434 (code: 123456)"
               />
             )}
 
